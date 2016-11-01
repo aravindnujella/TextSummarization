@@ -1,4 +1,4 @@
 def computeSimilarity(text):
-    return []
+    print("No computeSimilarity")
 if __name__ == "__main__":
     print("Similarity Debug")

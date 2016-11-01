@@ -24,7 +24,6 @@ class article:
         for t in re.findall(r'=+[^=]*=+', temp):
             match = re.search(r'=+([^=]*)=+', t)
             if match != None and match.group(1) != '':
-                print("Entered for" + t)
                 self.sections.append(match.group(1).strip())
         self.text += unidecode(wikiPage.summary)
         for s in self.sections:

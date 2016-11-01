@@ -5,12 +5,9 @@ import urllib.request
 
 
 def extractTiles(lexicalScores):
-    print("Lol")
-
+    print("No extractTiles")
+    return []
 if __name__ == "__main__":
-    articleString = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exlimit=max&explaintext&titles=" + argv[1] + "&redirects="
-    response = urllib.request.urlopen(articleString)
-    html = response.read()
-    article = preprocess.article(html)
-    lexicalScores = similarity.computeSimilarity(article.toText())
+    article = preprocess.article(argv[1])
+    lexicalScores = similarity.computeSimilarity(article.getText())
     extractTiles(lexicalScores)
