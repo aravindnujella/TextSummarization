@@ -11,34 +11,6 @@ from pprint import pprint
 from collections import Counter
 
 
-def extractSentences(text):
-    tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    return tokenizer.tokenize(text)
-
-
-def extractWords(text):
-    sentences = extractSentences(text)
-    sentenceID = []
-    stop = set(stopwords.words('english'))
-    wnl = WordNetLemmatizer()
-    words = []
-    for i in range(len(sentences)):
-        s = sentences[i]
-        # replace all non alphabetic stuff with => "u.s.a" to "usa" and "12.69" to ""
-        rawWords = re.sub(r"[^a-zA-Z\s]+", "", s).split()
-        for w in rawWords:
-            # for each word in current sentence
-            if w not in stop:
-                # if it is not a stop word, we need its sentenceID
-                sentenceID.append(i)
-                pos = pos_tag(w)[0][1][0].lower()
-                if pos in ['a', 'n', 'v']:
-                    words.append(wnl.lemmatize(w, pos))
-                else:
-                    words.append(wnl.lemmatize(w))
-    return words, sentenceID
-
-
 def readWordVectors():
     # Hard Coded File Name
     wordVectors = {}
@@ -83,11 +55,11 @@ def computeConcepts(window):
     return addVectors(vec)
 
 
-def computeSimilarity(text, windowWidth=20):
+def computeSimilarity(article, windowWidth=20):
     global wordVectors
-    words, sentenceID = extractWords(text)
-    wordVectors = readWordVectors()
-    sentenceCount = max(sentenceID) + 1
+    words = article.getWords()
+    sentenceID = article.getSentenceIDs()
+    sentenceCount = len(article.getSentences())
 
     lexicalScores = [0 for i in range(sentenceCount)]
 
@@ -102,11 +74,11 @@ def computeSimilarity(text, windowWidth=20):
     return lexicalScores
 
 
-def computeSimilarity1(text, windowWidth=30):
+def computeSimilarity1(article, windowWidth=30):
     global wordVectors
-    words, sentenceID = extractWords(text)
-    wordVectors = readWordVectors()
-    sentenceCount = max(sentenceID) + 1
+    words = article.getWords()
+    sentenceID = article.getSentenceIDs()
+    sentenceCount = len(article.getSentences())
 
     lexicalScores = [0 for i in range(sentenceCount)]
 
@@ -130,10 +102,12 @@ def computeSimilarity1(text, windowWidth=30):
     return lexicalScores
 
 
-def computeSimilarity2(text, w=20, k=10):
+def computeSimilarity2(article, w=20, k=10):
     global wordVectors
-    words, sentenceID = extractWords(text)
-    wordVectors = readWordVectors()
+    words = article.getWords()
+    sentenceID = article.getSentenceIDs()
+    sentenceCount = len(article.getSentences())
+
     lexicalScores = [0 for i in range(len(words))]
     windowWidth = k * w
     for i in range(windowWidth, len(words) - windowWidth + 1, w):
@@ -146,11 +120,11 @@ def computeSimilarity2(text, w=20, k=10):
     return lexicalScores
 
 
-def computeSimilarity3(text, w=20, k=10):
-    #Jaccard similarity
-    global wordVectors
-    words, sentenceID = extractWords(text)
-    # wordVectors = readWordVectors()
+def computeSimilarity3(article, w=20, k=10):
+    # Jaccard similarity
+    words = article.getWords()
+    sentenceID = article.getSentenceIDs()
+    sentenceCount = len(article.getSentences())
     lexicalScores = []
     windowWidth = k * w
     for i in range(windowWidth, len(words) - windowWidth + 1, w):
@@ -159,14 +133,16 @@ def computeSimilarity3(text, w=20, k=10):
         leftConcept = set(leftWindow)
         rightConcept = set(rightWindow)
         allWindowWords = set(leftWindow + rightWindow)
-        lexicalScores.append(len(leftConcept.intersection(rightConcept))/len(allWindowWords))
+        lexicalScores.append(len(leftConcept.intersection(rightConcept)) / len(allWindowWords))
 
     return lexicalScores
 
-def computeSimilarity4(text, w=20, k=10):
+
+def computeSimilarity4(article, w=20, k=10):
     global wordVectors
-    words, sentenceID = extractWords(text)
-    # wordVectors = readWordVectors()
+    words = article.getWords()
+    sentenceID = article.getSentenceIDs()
+    sentenceCount = len(article.getSentences())
     lexicalScores = []
     windowWidth = k * w
     for i in range(windowWidth, len(words) - windowWidth + 1, w):
@@ -182,47 +158,17 @@ def computeSimilarity4(text, w=20, k=10):
             sim += leftConcept[w] * rightConcept[w]
             lSquare += leftConcept[w]**2
             rSquare += rightConcept[w]**2
-        lexicalScores.append(sim/(lSquare*rSquare)**0.5)
-
+        lexicalScores.append(sim / (lSquare * rSquare)**0.5)
     return lexicalScores
-
-
-# def computeSimilarity3(text, windowWidth=20):
-#     sentences = extractSentences(text)
-#     words, sentenceID = extractWords(text)
-#     unique_words = list(set(words))
-#     wordLists = [[] for s in sentences]
-#     for i in range(len(words)):
-#         wordLists[sentenceID[i]].append(words[i])
-#     lexicalScores = []
-#     for gap in range(1, len(wordLists)):
-#         current_blocksize = min(gap, windowWidth, len(wordLists) - gap)
-#         leftWindow = [word]
-#         rightWindow =
-#         block1_vector = Counter()
-#         block2_vector = Counter()
-
-#         for j in range(1, current_blocksize):
-#             block1_vector += Counter(wordLists[gap + j - current_blocksize])
-#             block2_vector += Counter(wordLists[gap + j])
-#         val = 0.0
-#         print(block1_vector, block2_vector)
-#         block1_square = 0
-#         block2_square = 0
-#         for word_token in unique_words:
-#             val += (block1_vector[word_token] * block2_vector[word_token])
-#             print(word_token)
-#             block1_square += (block1_vector[word_token]**2)
-#             block2_square += (block2_vector[word_token]**2)
-#             print(block2_square, block1_square)
-#         lexicalScores.append(val / (block1_square * block2_square)**0.5)
-#     return lexicalScores
 
 
 def constructGraph(lexicalScores):
     plt.plot(lexicalScores)
     plt.show()
+
+
 if __name__ == "__main__":
-    article = preprocess.article(argv[1])
-    lexicalScores = computeSimilarity3(article.getText(), int(argv[2], int(argv[3])))
+    # wordVectors = readWordVectors()
+    article = preprocess.cachedArticle(argv[1])
+    lexicalScores = computeSimilarity3(article, int(argv[2], int(argv[3])))
     constructGraph(lexicalScores)
