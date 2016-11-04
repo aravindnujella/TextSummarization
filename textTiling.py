@@ -1,7 +1,6 @@
 from sys import argv
 import preprocess
 import similarity
-import urllib.request
 import numpy as np
 import matplotlib.pyplot as plt
 

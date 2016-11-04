@@ -2,7 +2,6 @@ from sys import argv
 import preprocess
 import similarity
 import textTiling
-import urllib.request
 
 def textRankSummary(text):
     return "No textRankSummary"
