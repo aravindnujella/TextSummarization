@@ -9,6 +9,7 @@ from sys import argv
 import matplotlib.pyplot as plt
 from pprint import pprint
 from collections import Counter
+import numpy as np
 
 
 def readWordVectors():
@@ -161,6 +162,21 @@ def computeSimilarity4(article, w=20, k=10):
         lexicalScores.append(sim / (lSquare * rSquare)**0.5)
     return lexicalScores
 
+def computeSimilarity5(article, w=20, k=10):
+    global wordVectors
+    words = article.getWords()
+    sentenceID = article.getSentenceIDs()
+    sentenceCount = len(article.getSentences())
+
+    lexicalScores = []
+    windowWidth = k * w
+    for i in range(windowWidth, len(words) - windowWidth + 1, w):
+        leftWindow = words[i - windowWidth:i]
+        rightWindow = words[i:i + windowWidth]
+        left_tensor = [wordVectors[word] for word in leftWindow]
+        right_tensor = [wordVectors[word] for word in rightWindow]
+        lexicalScores.append(np.tensordot(left_tensor, right_tensor))
+    return lexicalScores
 
 def constructGraph(lexicalScores):
     plt.plot(lexicalScores)
@@ -168,7 +184,7 @@ def constructGraph(lexicalScores):
 
 
 if __name__ == "__main__":
-    # wordVectors = readWordVectors()
+    wordVectors = readWordVectors()
     article = preprocess.cachedArticle(argv[1])
-    lexicalScores = computeSimilarity3(article, int(argv[2], int(argv[3])))
+    lexicalScores = computeSimilarity5(article, int(argv[2], int(argv[3])))
     constructGraph(lexicalScores)
