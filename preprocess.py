@@ -19,7 +19,6 @@ class article:
         wikiPage = wikipedia.page(articleName)
         # Cleaning, finding topics and plain text from the article
         self.extract(wikiPage)
-
     def extract(self, wikiPage):
         # self.text and self.topics
         self.extractText(wikiPage)
@@ -34,8 +33,8 @@ class article:
         # prelim cleaning, translitting non unicode stuff
         temp = unidecode(wikiPage.content)
         # remove all paranthesized stuff
-        re.sub(r'\([^\)]*\)', '', temp)
-        re.sub(r'\[[^\]]*\]', '', temp)
+        re.sub(r'\([^\)]*\)', ' ', temp)
+        re.sub(r'\[[^\]]*\]', ' ', temp)
         topicsSearch = re.findall(r'=+[^=]*=+', temp)
         self.sections = []
         for t in re.findall(r'=+[^=]*=+', temp):
@@ -55,13 +54,14 @@ class article:
     def extractWords(self):
         sentences = self.sentences
         sentenceID = []
+        # TODO: Also add all single letters
         stop = set(stopwords.words('english'))
         wnl = WordNetLemmatizer()
         words = []
         for i in range(len(sentences)):
             s = sentences[i]
             # replace all non alphabetic stuff with => "u.s.a" to "usa" and "12.69" to ""
-            rawWords = re.sub(r"[^a-zA-Z\s]+", "", s).split()
+            rawWords = re.sub(r"[^a-zA-Z\s]+", " ", s).split()
             for w in rawWords:
                 # for each word in current sentence
                 if w not in stop:
@@ -77,6 +77,11 @@ class article:
 
     def getText(self):
         return self.text
+    # sections as they appear in doc order
+
+    def getSections(self):
+        # section : text dictionary
+        return self.sections
 
     def getTopics(self):
         return self.topics
@@ -89,6 +94,29 @@ class article:
 
     def getSentenceIDs(self):
         return self.sentenceID
+
+    def getTopicIndices(self):
+        topicIndices = []
+        temp = 0
+        for s in self.getTopicWiseSentences():
+            topicIndices.append(len(s) + temp)
+            temp += len(s)
+        return topicIndices
+
+    # def getWordID(self, w, k, i):
+    #     # getWordID from windowID...
+    #     return w * k + w * i
+
+    # def getSentenceID(self, w, k, i):
+    #     # getSentenceID from windowID
+    #     return self.sentenceID[w * k + w * i]
+
+    def getTopicWiseSentences(self):
+        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+        topicWiseSentences = []
+        for s in self.sections:
+            topicWiseSentences.append(tokenizer.tokenize(self.topics[s]))
+        return topicWiseSentences
 
 
 def cachedArticle(articleName):
